@@ -1,25 +1,109 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import path = require("path");
+import * as cp from "child_process";
+import * as vscode from "vscode";
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+interface ISchematic {
+  label: string;
+  value: string;
+}
+
+function _getFolder(target: vscode.Uri) {
+  if (target) {
+    console.log("_getFolder from target");
+    return target;
+  } else {
+    if (vscode.window.activeTextEditor !== undefined) {
+      console.log("_getFolder from activateTextEditor");
+      return vscode.Uri.parse(
+        path.dirname(vscode.window.activeTextEditor.document.uri.fsPath)
+      );
+    } else if (vscode.workspace.workspaceFolders !== undefined) {
+      console.log("_getFolder from workspaceFolders");
+      return vscode.workspace.workspaceFolders[0].uri;
+    } else {
+      console.log("_getFolder no folder found");
+      return;
+    }
+  }
+}
+
+async function _pickSchematic() {
+  const schematics: Array<ISchematic> = [
+    {
+      label: "Class",
+      value: "class",
+    },
+    {
+      label: "Interface",
+      value: "interface",
+    },
+    {
+      label: "Enum",
+      value: "enum",
+    },
+    {
+      label: "Interface & Class",
+      value: "interfaceclass",
+    },
+  ];
+
+  return await vscode.window.showQuickPick<ISchematic>(schematics);
+}
+
+async function _runCommand(
+  schematic: ISchematic,
+  folder: vscode.Uri,
+  fileName: string
+) {
+  const command = `dotnet generate ${schematic?.value} ${fileName}`;
+  let cwd = folder.path;
+  if (
+    folder.scheme !== "file" &&
+    folder.scheme !== "https" &&
+    folder.scheme !== ""
+  )
+    cwd = folder.scheme.toUpperCase() + ":\\" + folder.path;
+
+  console.log("CWD", cwd, folder);
+  console.log(cwd + " " + command);
+  cp.exec(
+    command,
+    {
+      cwd,
+    },
+    (err, stdout, stderr) => {
+      if (stdout) vscode.window.showInformationMessage(stdout);
+
+      if (stderr) vscode.window.showErrorMessage(stderr);
+
+      if (err) vscode.window.showErrorMessage(err.message);
+    }
+  );
+}
+
 export function activate(context: vscode.ExtensionContext) {
-	
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "dotnet-generate-vscode" is now active!');
+  let disposable = vscode.commands.registerCommand(
+    "dotnet-generate-vscode.addFile",
+    async (target: vscode.Uri) => {
+      const folder = _getFolder(target);
+      if (!folder) return;
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('dotnet-generate-vscode.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Dotnet Generate for VS Code!');
-	});
+      let fileName = await vscode.window.showInputBox({
+        placeHolder: "File name",
+        prompt: "Please enter file name",
+      });
+      if (!fileName) return;
 
-	context.subscriptions.push(disposable);
+      const schematic = await _pickSchematic();
+      if (!schematic) return;
+
+      await _runCommand(schematic, folder, fileName);
+    }
+  );
+
+  context.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated
