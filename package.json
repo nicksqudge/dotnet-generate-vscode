@@ -3,7 +3,7 @@
   "displayName": "Dotnet Generate for VS Code",
   "description": "VS Code extension for Dotnet Generate",
   "publisher": "nicksqudge",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.57.0"
   },

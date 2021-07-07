@@ -11,6 +11,10 @@ You will need to install dotnet generate as tool:
 
 ## Release Notes
 
+### 0.0.5
+
+Fixed an issue with running the Generate C# File command
+
 ### 0.0.4
 
 An Alpha version for testing across different platforms to make sure everything is working alright. Still might be buggy
