@@ -11,9 +11,13 @@ You will need to install dotnet generate as tool:
 
 ## Release Notes
 
+### 0.0.6
+
+Added better output response from console so you can see errors better. Thanks Weezard
+
 ### 0.0.5
 
-Fixed an issue with running the Generate C# File command
+Fixed an issue with running the Generate C# File command. Thanks Weezard
 
 ### 0.0.4
 

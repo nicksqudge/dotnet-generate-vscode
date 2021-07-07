@@ -63,19 +63,30 @@ async function _runCommand(
 
   console.log(folder);
   console.log(cwd + " " + command);
-  cp.exec(
-    command,
-    {
-      cwd,
-    },
-    (err, stdout, stderr) => {
-      if (stdout) vscode.window.showInformationMessage(stdout);
 
-      if (stderr) vscode.window.showErrorMessage(stderr);
+  const execShell = (cmd: string, cwd: string) =>
+    new Promise<string>((resolve, reject) => {
+      cp.exec(
+        cmd,
+        {
+          cwd,
+        },
+        (err, out) => {
+          if (err) {
+            return reject(err);
+          }
+          return resolve(out);
+        }
+      );
+    });
 
-      if (err) vscode.window.showErrorMessage(err.message);
-    }
-  );
+  await execShell(command, cwd)
+    .then((result) => {
+      return vscode.window.showInformationMessage(result);
+    })
+    .catch((error) => {
+      return vscode.window.showErrorMessage(error);
+    });
 }
 
 export function activate(context: vscode.ExtensionContext) {
